@@ -82,27 +82,41 @@
   /**
    * Handle focus.
    *
+   * @param {Event} event The event that fired.
    * @private
    */
-  MaterialTextfield.prototype.onFocus_ = function() {
+  MaterialTextfield.prototype.onFocus_ = function(event) {
     this.element_.classList.add(this.CssClasses_.IS_FOCUSED);
   };
 
   /**
    * Handle lost focus.
    *
+   * @param {Event} event The event that fired.
    * @private
    */
-  MaterialTextfield.prototype.onBlur_ = function() {
+  MaterialTextfield.prototype.onBlur_ = function(event) {
     this.element_.classList.remove(this.CssClasses_.IS_FOCUSED);
+    this.checkValidity();
+  };
+
+  /**
+   * Handle value change.
+   *
+   * @param {Event} event The event that fired.
+   * @private
+   */
+  MaterialTextfield.prototype.onChange_ = function(event) {
+    this.checkValidity();
   };
 
   /**
    * Handle reset event from out side.
    *
+   * @param {Event} event The event that fired.
    * @private
    */
-  MaterialTextfield.prototype.onReset_ = function() {
+  MaterialTextfield.prototype.onReset_ = function(event) {
     this.updateClasses_();
   };
 
@@ -113,8 +127,16 @@
    */
   MaterialTextfield.prototype.updateClasses_ = function() {
     this.checkDisabled();
-    this.checkValidity();
     this.checkDirty();
+
+    var dirty = this.element_.classList
+      .contains(this.CssClasses_.IS_DIRTY);
+    var required = this.input_.required;
+
+    if (!required || required && dirty) {
+      this.checkValidity();
+    }
+
     this.checkFocus();
   };
 
@@ -141,7 +163,7 @@
   * @public
   */
   MaterialTextfield.prototype.checkFocus = function() {
-    if (this.element_.querySelector(':focus')) {
+    if (Boolean(this.element_.querySelector(':focus'))) {
       this.element_.classList.add(this.CssClasses_.IS_FOCUSED);
     } else {
       this.element_.classList.remove(this.CssClasses_.IS_FOCUSED);
@@ -201,6 +223,7 @@
   MaterialTextfield.prototype.enable = function() {
     this.input_.disabled = false;
     this.updateClasses_();
+    this.checkValidity();
   };
   MaterialTextfield.prototype['enable'] = MaterialTextfield.prototype.enable;
 
@@ -211,37 +234,17 @@
    * @public
    */
   MaterialTextfield.prototype.change = function(value) {
+
     this.input_.value = value || '';
     this.updateClasses_();
   };
   MaterialTextfield.prototype['change'] = MaterialTextfield.prototype.change;
 
   /**
-   * Focus text field.
-   *
-   * @public
-   */
-  MaterialTextfield.prototype.focus = function() {
-    this.input_.focus();
-    this.updateClasses_();
-  };
-  MaterialTextfield.prototype['focus'] = MaterialTextfield.prototype.focus;
-
-  /**
-   * Blur text field.
-   *
-   * @public
-   */
-  MaterialTextfield.prototype.blur = function() {
-    this.input_.blur();
-    this.updateClasses_();
-  };
-  MaterialTextfield.prototype['blur'] = MaterialTextfield.prototype.blur;
-
-  /**
    * Initialize element.
    */
   MaterialTextfield.prototype.init = function() {
+
     if (this.element_) {
       this.label_ = this.element_.querySelector('.' + this.CssClasses_.LABEL);
       this.input_ = this.element_.querySelector('.' + this.CssClasses_.INPUT);
@@ -264,10 +267,12 @@
         this.boundFocusHandler = this.onFocus_.bind(this);
         this.boundBlurHandler = this.onBlur_.bind(this);
         this.boundResetHandler = this.onReset_.bind(this);
+        this.boundChangeHandler = this.onChange_.bind(this);
         this.input_.addEventListener('input', this.boundUpdateClassesHandler);
         this.input_.addEventListener('focus', this.boundFocusHandler);
         this.input_.addEventListener('blur', this.boundBlurHandler);
         this.input_.addEventListener('reset', this.boundResetHandler);
+        this.input_.addEventListener('change', this.boundChangeHandler);
 
         if (this.maxRows !== this.Constant_.NO_MAX_ROWS) {
           // TODO: This should handle pasting multi line text.
